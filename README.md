@@ -11,7 +11,8 @@ forwards the rest to a Google Chat incoming webhook.
 
 ## Quick start
 
-Python 3.10, and the six dependencies in `requirements.txt`.
+Python 3.10, and the six dependencies in `requirements.txt`. The service is
+one module, and it reads its configuration from the environment.
 
 ```bash
 pip install -r requirements.txt
@@ -59,6 +60,9 @@ nothing and exits. Run the service with uvicorn.
   replied with.
 - **Answers a health check.** `GET` and `HEAD` on `/health-check` return `204`
   with no body.
+- **Serves its own API documentation.** FastAPI's defaults are on: the
+  interactive documentation at `/docs`, the reference at `/redoc`, and the
+  schema at `/openapi.json`.
 - **Reports its own failures to Sentry.** The service initialises the Sentry
   SDK with its own DSN, with traces and profiles sampled at `1.0`.
 
@@ -96,12 +100,16 @@ there. It copies no application code, so `/app` in the image holds
 `requirements.txt` and nothing else, and it sets no command of its own, so
 the image keeps the base image's `CMD ["python3"]`. A container from it
 starts Python, reads nothing and exits; `docker compose up webhook-service`
-comes up and is straight back to `Exited (0)`. `Dockerfile.test` builds the
-same base, installs both requirement files, copies `app/` and `tests/`, and
-runs `pytest -v /tests`. `docker-compose.yml` defines two services:
-`webhook-service`, which publishes host port 8007 on container port 8000, and
-`tests`, which mounts the working tree at `/workspace` and runs
-`pytest -v tests`. Both take their variables from `.env.test`.
+comes up and is straight back to `Exited (0)`.
+
+`Dockerfile.test` builds the same base, installs both requirement files and
+copies `app/` and `tests/` into `/app`. Its command is
+`pytest -v /tests`, and there is no `/tests` in the image, so the image
+alone fails with `file or directory not found: /tests`. `docker-compose.yml`
+defines two services: `webhook-service`, which publishes host port 8007 on
+container port 8000, and `tests`, which mounts the working tree at
+`/workspace`, runs `pytest -v tests` from there and takes its variables from
+`.env.test`. The override is what makes the test command work.
 
 ## Configuration
 
@@ -146,7 +154,7 @@ client is replaced with a mock.
 | `pytest.ini` | `asyncio_mode = strict`, and a function-scoped fixture loop. |
 | `ruff.toml` | Line length 120, and the E, F, W, B and C rule sets. |
 | `Dockerfile` | The service image. |
-| `Dockerfile.test` | The test image, with `pytest -v /tests` as its command. |
+| `Dockerfile.test` | The test image. Its command points at `/tests`, and the tests are copied to `/app/tests`. |
 | `docker-compose.yml` | The `webhook-service` and `tests` services. |
 | `.env.test` | The three variables, with placeholder values. |
 

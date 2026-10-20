@@ -8,8 +8,8 @@ web
 
 The service is a FastAPI application on Python 3.10, pinned to
 `python:3.10.17-slim` in both Dockerfiles. It runs as a container or as a
-uvicorn process, and it has no interface of its own: it answers two HTTP
-routes and writes log lines.
+uvicorn process, and it has no interface of its own: it answers a handful of
+HTTP routes and writes log lines.
 
 ## Users
 
@@ -80,6 +80,8 @@ Confirmed by the code:
 - An answer other than 200 comes back as `{"error": "Failed to send message
   to Google Chat: ..."}`, with a 200 status code.
 - `GET` and `HEAD` on `/health-check` answer 204 with no body.
+- The service serves FastAPI's documentation routes: `/docs`, `/redoc` and
+  `/openapi.json`.
 - The service sends its own errors to Sentry, with traces and profiles sampled
   at 1.0.
 - The application refuses to start when `GOOGLE_CHAT_WEBHOOK_URL` or
@@ -155,8 +157,9 @@ record of who runs the service.
   lines, and nothing in the code depends on colour, layout or an image.
 - **The notification is one text field.** It carries no markup beyond Google
   Chat's `*bold*`, so it needs no layout to be understood.
-- **The language has not been decided.** The message labels are English, and
-  the code writes them in English.
+- **The language has not been decided.** The labels in the message are
+  English, and the code writes them in English. Nothing in the repository
+  says whether that was a choice.
 - **The shape of the message on a phone screen has not been looked at.**
   Eight lines is a decision that was made, and no one has checked how it
   reads in a notification on a small screen.

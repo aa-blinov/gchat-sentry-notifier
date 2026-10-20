@@ -11,7 +11,7 @@ This file is what you need to work on the project without reading all of it.
 ```bash
 pip install -r requirements.txt          # the service
 pip install -r requirements-test.txt     # pytest, pytest-asyncio, pytest-mock
-export GOOGLE_CHAT_WEBHOOK_URL=... SENTRY_DSN=...   # the import refuses to run without them
+export GOOGLE_CHAT_WEBHOOK_URL=... SENTRY_DSN=...   # the application will not import without these two
 pytest -v tests/                        # the five tests, locally
 docker compose run --rm tests           # the same tests, in the test image
 uvicorn app.main:app --port 8000        # run the service
@@ -32,7 +32,7 @@ file, so install it yourself before running `ruff check .`.
 | `pytest.ini` | `asyncio_mode = strict` and `asyncio_default_fixture_loop_scope = function`. |
 | `ruff.toml` | Line length 120, and the E, F, W, B and C rule sets. |
 | `Dockerfile` | The service image: the base, the runtime dependencies, and no application code. |
-| `Dockerfile.test` | The test image: the same base, both requirement files, `app/` and `tests/`, and `CMD ["pytest", "-v", "/tests"]`. |
+| `Dockerfile.test` | The test image: the same base, both requirement files, `app/` and `tests/` in `/app`, and a `CMD` that points at `/tests`. |
 | `docker-compose.yml` | The `webhook-service` and `tests` services. |
 | `.env.test` | The three variables with placeholder values, read by Compose for both services. |
 | `.dockerignore` | `.env`, `*.pyc`, `__pycache__`, `.DS_Store`, `.venv`, `venv`. |
@@ -77,6 +77,12 @@ file, so install it yourself before running `ruff check .`.
   and `profiles_sample_rate=1.0` send 100% of the service's own telemetry to
   the DSN in `SENTRY_DSN`. Lower the two rates before pointing this at a
   busy project.
+- **The test image's own command points at a directory that is not in it.**
+  `Dockerfile.test` copies `tests/` into `/app/tests` and sets `CMD
+  ["pytest", "-v", "/tests"]`, so the image exits with `file or directory not
+  found: /tests`. The compose service replaces the command with `pytest -v
+  tests`, mounts the tree at `/workspace` and runs from there, which is why
+  `docker compose run --rm tests` works and the image on its own does not.
 
 ## Style / safety rails
 
