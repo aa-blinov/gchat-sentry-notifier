@@ -1,6 +1,6 @@
 services:
   webhook-service:
-    build: 
+    build:
       context: .
     container_name: sentry-webhook-service
     ports:
