@@ -1,4 +1,4 @@
-FROM python:3.10.17-slim
+FROM python:3.14.7-slim
 
 ENV PYTHONPATH=/workspace
 
